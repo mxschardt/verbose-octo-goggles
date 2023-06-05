@@ -8,7 +8,7 @@ INSERT INTO `coffee`.`Customers` (`Id`, `Email`, `Phone`, `Name`) VALUES
 (2, 'vasya@example.com', '0987654321', 'Вася'),
 (3, 'adnrey@example.com', '5555555555', 'Андрей');
 
-INSERT INTO `coffee`.`Stores` (`Id`, `AddressId`, `OpeningTime`, `ClosingingTime`) VALUES
+INSERT INTO `coffee`.`Stores` (`Id`, `AddressId`, `OpeningTime`, `ClosingTime`) VALUES
 (1, 1, '08:00:00', '20:00:00'),
 (2, 2, '09:00:00', '21:00:00'),
 (3, 3, '10:00:00', '22:00:00');
