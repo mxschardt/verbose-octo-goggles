@@ -186,7 +186,7 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- -----------------------------------------------------
 -- Table `coffee`.`Orderproduct`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `coffee`.`Orderproduct` (
+CREATE TABLE IF NOT EXISTS `coffee`.`OrderProduct` (
   `OrderId` INT NOT NULL,
   `ProductsId` INT NOT NULL,
   `Quantity` INT NOT NULL DEFAULT '1',
@@ -207,43 +207,37 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
-USE `coffee` ;
 
 -- -----------------------------------------------------
 -- function GetOrderTotal
 -- -----------------------------------------------------
-
 DELIMITER $$
-USE `coffee`$$
-CREATE DEFINER=`root`@`localhost` FUNCTION `GetOrderTotal`(order_id INT) RETURNS int
-    DETERMINISTIC
+CREATE FUNCTION `GetOrderTotal`(order_id INT) RETURNS INT
+READS SQL DATA
 BEGIN
   DECLARE total_price INT;
-  SELECT SUM(Quantity * Price) INTO total_price
-  FROM OrderProduct
-  JOIN Products ON OrderProduct.ProductsId = Products.Id
-  WHERE OrderProduct.OrderId = order_id;
+  
+  SELECT SUM(`Quantity` * Price) INTO total_price
+  FROM `coffee`.`OrderProduct`
+  JOIN `coffee`.`Products` ON `coffee`.`OrderProduct`.`ProductsId` = `Products`.`Id`
+  WHERE `coffee`.`OrderProduct`.`OrderId` = order_id;
   
   RETURN total_price;
 END$$
-
 DELIMITER ;
-USE `coffee`;
 
+-- -----------------------------------------------------
+-- trigger CheckDeliveryMinAmount
+-- -----------------------------------------------------
 DELIMITER $$
-USE `coffee`$$
-CREATE
-DEFINER=`root`@`localhost`
-TRIGGER `coffee`.`CHECK_DELIVERY_MIN_AMOUNT`
-BEFORE INSERT ON `coffee`.`delivery`
+CREATE TRIGGER `coffee`.`CheckDeliveryMinAmount`
+BEFORE INSERT ON `coffee`.`Delivery`
 FOR EACH ROW
 BEGIN
     IF GetOrderTotal(NEW.`OrderId`) < 400 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'It is not possible to arrange delivery for this order. The minimum order amount for delivery is 400 rubles.';
     END IF;
 END$$
-
-
 DELIMITER ;
 
 SET SQL_MODE=@OLD_SQL_MODE;
