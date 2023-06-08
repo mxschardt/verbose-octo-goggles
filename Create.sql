@@ -25,8 +25,8 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Addresses` (
   `Town` VARCHAR(255) NOT NULL,
   `Street` VARCHAR(255) NOT NULL,
   `House` VARCHAR(63) NOT NULL,
-  `Entrance` VARCHAR(63) NOT NULL,
-  `Flat` VARCHAR(63) NOT NULL,
+  `Entrance` VARCHAR(63),
+  `Flat` VARCHAR(63),
   PRIMARY KEY (`Id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 0
