@@ -25,11 +25,11 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Addresses` (
   `Town` VARCHAR(255) NOT NULL,
   `Street` VARCHAR(255) NOT NULL,
   `House` VARCHAR(63) NOT NULL,
-  `Entrance` VARCHAR(63),
-  `Flat` VARCHAR(63),
+  `Entrance` VARCHAR(63) NULL DEFAULT NULL,
+  `Flat` VARCHAR(63) NULL DEFAULT NULL,
   PRIMARY KEY (`Id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
+AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -39,12 +39,12 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `coffee`.`Customers` (
   `Id` INT NOT NULL AUTO_INCREMENT,
-  `Email` VARCHAR(255) NOT NULL,
-  `Phone` VARCHAR(255) NOT NULL,
+  `Email` VARCHAR(63) NOT NULL,
+  `Phone` VARCHAR(63) NOT NULL,
   `Name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`Id`, `Email`, `Phone`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
+AUTO_INCREMENT = 3
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Stores` (
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
+AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Orders` (
     ON DELETE CASCADE
     ON UPDATE RESTRICT)
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
+AUTO_INCREMENT = 5
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -118,7 +118,6 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Delivery` (
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -143,7 +142,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Employees` (
     ON DELETE CASCADE
     ON UPDATE RESTRICT)
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
+AUTO_INCREMENT = 3
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -159,7 +158,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Products` (
   `ImageURI` VARCHAR(255) NULL DEFAULT NULL,
   PRIMARY KEY (`Id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
+AUTO_INCREMENT = 7
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -213,6 +212,24 @@ COLLATE = utf8mb4_0900_ai_ci;
 USE `coffee` ;
 
 -- -----------------------------------------------------
+-- procedure CreateCustomer
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `coffee`$$
+CREATE DEFINER=`root`@`%` PROCEDURE `CreateCustomer`(
+    IN Name VARCHAR(63),
+	IN Phone VARCHAR(63),
+	IN Email VARCHAR(255)
+)
+BEGIN
+	INSERT INTO Customers(Email, Phone, Name)
+    VALUES (Email, Phone, Name);
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
 -- procedure CreateEmployee
 -- -----------------------------------------------------
 
@@ -230,6 +247,55 @@ CREATE DEFINER=`root`@`%` PROCEDURE `CreateEmployee`(
 BEGIN
 	INSERT INTO Employees(FirstName, LastName, Title, Salary, StoreId, Phone, Email)
     VALUES (FirstName, LastName, Title, Salary, StoreId, Phone, Email);
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure CreateOrder
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `coffee`$$
+CREATE DEFINER=`root`@`%` PROCEDURE `CreateOrder`(
+  IN `in_StoreId` INT,
+  IN `in_CustomerId` INT,
+  IN `in_Products` VARCHAR(255)
+)
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE product_id, product_quantity INT;
+	DECLARE product_cursor CURSOR FOR
+	  SELECT CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(in_Products, ',', n.digit+1), ',', -1) AS UNSIGNED) AS product,
+			 SUBSTRING_INDEX(SUBSTRING_INDEX(in_Products, ':', n.digit+1), ':', -1) AS quantity
+	  FROM
+	  (SELECT 0 AS digit UNION ALL
+	   SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL
+	   SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL
+	   SELECT 9) n
+	  WHERE n.digit <= LENGTH(in_Products) - LENGTH(REPLACE(in_Products, ',', ''));
+
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  INSERT INTO `coffee`.`Orders` (`StoreId`, `CustomerId`, `Status`) 
+  VALUES (in_StoreId, in_CustomerId, 'Pending');
+
+  SET @order_id = LAST_INSERT_ID();
+
+  OPEN product_cursor;
+
+  product_loop: LOOP
+    FETCH product_cursor INTO product_id, product_quantity;
+
+    IF done THEN
+      LEAVE product_loop;
+    END IF;
+
+    INSERT INTO `coffee`.`OrderProduct` (`OrderId`, `ProductsId`, `Quantity`)
+    VALUES (@order_id, product_id, product_quantity);
+  END LOOP;
+
+  CLOSE product_cursor;
 END$$
 
 DELIMITER ;
@@ -365,6 +431,10 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 USE `coffee`;
 
 DELIMITER $$
@@ -382,7 +452,3 @@ END$$
 
 
 DELIMITER ;
-
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
