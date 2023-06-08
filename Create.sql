@@ -18,7 +18,7 @@ USE `coffee` ;
 -- Table `coffee`.`Addresses`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `coffee`.`Addresses` (
-  `Id` INT NOT NULL,
+  `Id` INT NOT NULL AUTO_INCREMENT,
   `Town` VARCHAR(255) NOT NULL,
   `Street` VARCHAR(255) NOT NULL,
   `House` VARCHAR(63) NOT NULL,
@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Addresses` (
   `Flat` VARCHAR(63) NOT NULL,
   PRIMARY KEY (`Id`))
 ENGINE = InnoDB
+AUTO_INCREMENT = 4
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -34,12 +35,13 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- Table `coffee`.`Customers`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `coffee`.`Customers` (
-  `Id` INT NOT NULL,
+  `Id` INT NOT NULL AUTO_INCREMENT,
   `Email` VARCHAR(255) NOT NULL,
   `Phone` VARCHAR(255) NOT NULL,
   `Name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`Id`, `Email`, `Phone`))
 ENGINE = InnoDB
+AUTO_INCREMENT = 4
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -48,10 +50,10 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- Table `coffee`.`Stores`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `coffee`.`Stores` (
-  `Id` INT NOT NULL,
+  `Id` INT NOT NULL AUTO_INCREMENT,
   `AddressId` INT NOT NULL,
   `OpeningTime` TIME NULL DEFAULT NULL,
-  `ClosingingTime` TIME NULL DEFAULT NULL,
+  `ClosingTime` TIME NULL DEFAULT NULL,
   PRIMARY KEY (`Id`),
   INDEX `IX_Stores_AddressId` USING BTREE (`AddressId`) VISIBLE,
   CONSTRAINT `FK_Stores_Addresses_AddressId`
@@ -60,6 +62,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Stores` (
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
+AUTO_INCREMENT = 5
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -68,7 +71,7 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- Table `coffee`.`Orders`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `coffee`.`Orders` (
-  `Id` INT NOT NULL,
+  `Id` INT NOT NULL AUTO_INCREMENT,
   `StoreId` INT NOT NULL,
   `CustomerId` INT NOT NULL,
   `Status` VARCHAR(63) NOT NULL,
@@ -86,6 +89,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Orders` (
     ON DELETE CASCADE
     ON UPDATE RESTRICT)
 ENGINE = InnoDB
+AUTO_INCREMENT = 3
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -94,25 +98,24 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- Table `coffee`.`Delivery`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `coffee`.`Delivery` (
-  `Id` INT NOT NULL,
+  `Id` INT NOT NULL AUTO_INCREMENT,
   `OrderId` INT NOT NULL,
   `AddressId` INT NOT NULL,
   `DeliveryTime` TIMESTAMP NOT NULL,
   `Status` VARCHAR(63) NOT NULL,
   PRIMARY KEY (`Id`, `OrderId`),
-  INDEX `IX_Delivery_AddressId` USING BTREE (`AddressId`) VISIBLE,
   UNIQUE INDEX `OrderId_UNIQUE` (`OrderId` ASC) VISIBLE,
+  INDEX `IX_Delivery_AddressId` USING BTREE (`AddressId`) VISIBLE,
+  CONSTRAINT `fk_Delivery_1`
+    FOREIGN KEY (`OrderId`)
+    REFERENCES `coffee`.`Orders` (`Id`),
   CONSTRAINT `FK_Delivery_Addresses_AddressId`
     FOREIGN KEY (`AddressId`)
     REFERENCES `coffee`.`Addresses` (`Id`)
     ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_Delivery_1`
-    FOREIGN KEY (`OrderId`)
-    REFERENCES `coffee`.`Orders` (`Id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON UPDATE RESTRICT)
 ENGINE = InnoDB
+AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -121,7 +124,7 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- Table `coffee`.`Employees`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `coffee`.`Employees` (
-  `Id` INT NOT NULL,
+  `Id` INT NOT NULL AUTO_INCREMENT,
   `FirstName` VARCHAR(255) NOT NULL,
   `LastName` VARCHAR(255) NOT NULL,
   `Title` VARCHAR(63) NOT NULL,
@@ -137,6 +140,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Employees` (
     ON DELETE CASCADE
     ON UPDATE RESTRICT)
 ENGINE = InnoDB
+AUTO_INCREMENT = 7
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -145,38 +149,14 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- Table `coffee`.`Products`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `coffee`.`Products` (
-  `Id` INT NOT NULL,
+  `Id` INT NOT NULL AUTO_INCREMENT,
   `Title` VARCHAR(255) NOT NULL,
   `Description` TEXT NOT NULL,
   `Price` DECIMAL(10,2) NOT NULL,
   `ImageURI` VARCHAR(255) NULL DEFAULT NULL,
   PRIMARY KEY (`Id`))
 ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `coffee`.`OrderProduct`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `coffee`.`OrderProduct` (
-  `OrderId` INT NOT NULL,
-  `ProductsId` INT NOT NULL,
-  `Quantity` INT NOT NULL DEFAULT 1,
-  PRIMARY KEY (`OrderId`, `ProductsId`),
-  INDEX `IX_OrderProduct_ProductsId` USING BTREE (`ProductsId`) VISIBLE,
-  INDEX `FK_OrderProduct_Orders_OrderId` (`OrderId` ASC) VISIBLE,
-  CONSTRAINT `FK_OrderProduct_Orders_OrderId`
-    FOREIGN KEY (`OrderId`)
-    REFERENCES `coffee`.`Orders` (`Id`)
-    ON DELETE CASCADE
-    ON UPDATE RESTRICT,
-  CONSTRAINT `FK_OrderProduct_Products_ProductsId`
-    FOREIGN KEY (`ProductsId`)
-    REFERENCES `coffee`.`Products` (`Id`)
-    ON DELETE CASCADE
-    ON UPDATE RESTRICT)
-ENGINE = InnoDB
+AUTO_INCREMENT = 7
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -202,6 +182,69 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
+
+-- -----------------------------------------------------
+-- Table `coffee`.`Orderproduct`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `coffee`.`Orderproduct` (
+  `OrderId` INT NOT NULL,
+  `ProductsId` INT NOT NULL,
+  `Quantity` INT NOT NULL DEFAULT '1',
+  PRIMARY KEY (`OrderId`, `ProductsId`),
+  INDEX `IX_OrderProduct_ProductsId` USING BTREE (`ProductsId`) VISIBLE,
+  INDEX `FK_OrderProduct_Orders_OrderId` (`OrderId` ASC) VISIBLE,
+  CONSTRAINT `FK_OrderProduct_Orders_OrderId`
+    FOREIGN KEY (`OrderId`)
+    REFERENCES `coffee`.`Orders` (`Id`)
+    ON DELETE CASCADE
+    ON UPDATE RESTRICT,
+  CONSTRAINT `FK_OrderProduct_Products_ProductsId`
+    FOREIGN KEY (`ProductsId`)
+    REFERENCES `coffee`.`Products` (`Id`)
+    ON DELETE CASCADE
+    ON UPDATE RESTRICT)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+USE `coffee` ;
+
+-- -----------------------------------------------------
+-- function GetOrderTotal
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `coffee`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `GetOrderTotal`(order_id INT) RETURNS int
+    DETERMINISTIC
+BEGIN
+  DECLARE total_price INT;
+  SELECT SUM(Quantity * Price) INTO total_price
+  FROM OrderProduct
+  JOIN Products ON OrderProduct.ProductsId = Products.Id
+  WHERE OrderProduct.OrderId = order_id;
+  
+  RETURN total_price;
+END$$
+
+DELIMITER ;
+USE `coffee`;
+
+DELIMITER $$
+USE `coffee`$$
+CREATE
+DEFINER=`root`@`localhost`
+TRIGGER `coffee`.`CHECK_DELIVERY_MIN_AMOUNT`
+BEFORE INSERT ON `coffee`.`delivery`
+FOR EACH ROW
+BEGIN
+    IF GetOrderTotal(NEW.`OrderId`) < 400 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'It is not possible to arrange delivery for this order. The minimum order amount for delivery is 400 rubles.';
+    END IF;
+END$$
+
+
+DELIMITER ;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
