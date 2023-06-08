@@ -5,6 +5,9 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
 -- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+-- -----------------------------------------------------
 -- Schema coffee
 -- -----------------------------------------------------
 
@@ -26,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Addresses` (
   `Flat` VARCHAR(63) NOT NULL,
   PRIMARY KEY (`Id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 4
+AUTO_INCREMENT = 7
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -62,7 +65,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Stores` (
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 5
+AUTO_INCREMENT = 19
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -140,7 +143,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Employees` (
     ON DELETE CASCADE
     ON UPDATE RESTRICT)
 ENGINE = InnoDB
-AUTO_INCREMENT = 7
+AUTO_INCREMENT = 9
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -184,7 +187,7 @@ COLLATE = utf8mb4_0900_ai_ci;
 
 
 -- -----------------------------------------------------
--- Table `coffee`.`Orderproduct`
+-- Table `coffee`.`OrderProduct`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `coffee`.`OrderProduct` (
   `OrderId` INT NOT NULL,
@@ -207,13 +210,97 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
+USE `coffee` ;
+
+-- -----------------------------------------------------
+-- procedure CreateEmployee
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `coffee`$$
+CREATE DEFINER=`root`@`%` PROCEDURE `CreateEmployee`(
+	IN FirstName VARCHAR(255),
+    IN LastName VARCHAR(255),
+    IN Title VARCHAR(63),
+    IN Salary DECIMAL(10,2),
+    IN StoreId INT,
+	IN Phone VARCHAR(255),
+	IN Email VARCHAR(255)
+)
+BEGIN
+	INSERT INTO Employees(FirstName, LastName, Title, Salary, StoreId, Phone, Email)
+    VALUES (FirstName, LastName, Title, Salary, StoreId, Phone, Email);
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure CreateProduct
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `coffee`$$
+CREATE DEFINER=`root`@`%` PROCEDURE `CreateProduct`(
+	Title VARCHAR(255),
+	Description TEXT, 
+	Price DECIMAL(10,2),
+	ImageURI VARCHAR(255)
+)
+BEGIN
+	INSERT INTO `coffee`.`Products`(Title, Description, Price, ImageURI)
+    VALUES (Title, Description, Price, ImageURI);
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure CreateStore
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `coffee`$$
+CREATE DEFINER=`root`@`%` PROCEDURE `CreateStore`(
+    IN `Town` VARCHAR(255),
+    IN `Street` VARCHAR(255),
+    IN `House` VARCHAR(63),
+    IN `Entrance` VARCHAR(63),
+    IN `Flat` VARCHAR(63),
+    IN `OpeningTime` TIME,
+    IN `ClosingTime` TIME
+)
+BEGIN
+    DECLARE v_AddressID INT;
+
+    SELECT Id INTO v_AddressID
+    FROM coffee.Addresses a
+    WHERE a.Town = Town AND a.Street = Street AND a.House = House AND a.Entrance = Entrance AND a.Flat = Flat
+    LIMIT 1;
+
+    -- Если адрес не существует, вставляем новый адрес
+    IF v_AddressID IS NULL THEN
+        INSERT INTO `coffee`.`Addresses`(`Town`, `Street`, `House`, `Entrance`, `Flat`)
+        VALUES (Town, Street, House, Entrance, Flat);
+
+        SET v_AddressID = LAST_INSERT_ID();
+    END IF;
+
+    -- Вставка данных о магазине с использованием ID адреса
+    INSERT INTO `coffee`.`Stores`(AddressId, OpeningTime, ClosingTime)
+    VALUES (v_AddressID, OpeningTime, ClosingTime);
+
+    SELECT v_AddressID AS AddressID;
+END$$
+
+DELIMITER ;
 
 -- -----------------------------------------------------
 -- function GetOrderTotal
 -- -----------------------------------------------------
+
 DELIMITER $$
-CREATE FUNCTION `GetOrderTotal`(order_id INT) RETURNS INT
-READS SQL DATA
+USE `coffee`$$
+CREATE DEFINER=`root`@`%` FUNCTION `GetOrderTotal`(order_id INT) RETURNS int
+    READS SQL DATA
 BEGIN
   DECLARE total_price INT;
   
@@ -224,13 +311,67 @@ BEGIN
   
   RETURN total_price;
 END$$
+
 DELIMITER ;
 
 -- -----------------------------------------------------
--- trigger CheckDeliveryMinAmount
+-- procedure UpdateEmployee
 -- -----------------------------------------------------
+
 DELIMITER $$
-CREATE TRIGGER `coffee`.`CheckDeliveryMinAmount`
+USE `coffee`$$
+CREATE DEFINER=`root`@`%` PROCEDURE `UpdateEmployee`(
+    IN p_Id INT,
+    IN p_Title VARCHAR(63),
+    IN p_Salary DECIMAL(10,2)
+)
+BEGIN
+    -- Обновление позиции сотрудника, если передано значение
+    IF p_Title IS NOT NULL THEN
+        UPDATE Employees
+        SET Title = p_Title
+        WHERE Id = p_Id;
+    
+    -- Обновление зарплаты сотрудника, если передано значение
+    ELSEIF p_Salary IS NOT NULL THEN
+        UPDATE Employees
+        SET Salary = p_Salary
+        WHERE Id = p_Id;
+    
+    ELSE 
+		UPDATE Employees
+		SET Title = p_Title, Salary = p_Salary
+		WHERE Id = p_Id;
+	END IF;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure UpdateOrderStatus
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `coffee`$$
+CREATE DEFINER=`root`@`%` PROCEDURE `UpdateOrderStatus`(
+    IN p_Id INT,
+    IN p_Status VARCHAR(63)
+)
+BEGIN
+    -- Обновление статуса заказа
+    UPDATE Orders o
+    SET o.`Status` = p_Status
+    WHERE Id = p_Id;
+END$$
+
+DELIMITER ;
+USE `coffee`;
+
+DELIMITER $$
+USE `coffee`$$
+CREATE
+DEFINER=`root`@`%`
+TRIGGER `coffee`.`CheckDeliveryMinAmount`
 BEFORE INSERT ON `coffee`.`Delivery`
 FOR EACH ROW
 BEGIN
@@ -238,6 +379,8 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'It is not possible to arrange delivery for this order. The minimum order amount for delivery is 400 rubles.';
     END IF;
 END$$
+
+
 DELIMITER ;
 
 SET SQL_MODE=@OLD_SQL_MODE;
