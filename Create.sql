@@ -5,9 +5,6 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
 -- -----------------------------------------------------
--- Schema mydb
--- -----------------------------------------------------
--- -----------------------------------------------------
 -- Schema coffee
 -- -----------------------------------------------------
 
@@ -39,7 +36,7 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `coffee`.`Customers` (
   `Id` INT NOT NULL AUTO_INCREMENT,
-  `Email` VARCHAR(63) NOT NULL,
+  `Email` VARCHAR(255) NOT NULL,
   `Phone` VARCHAR(63) NOT NULL,
   `Name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`Id`, `Email`, `Phone`))
@@ -129,20 +126,11 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Employees` (
   `Id` INT NOT NULL AUTO_INCREMENT,
   `FirstName` VARCHAR(255) NOT NULL,
   `LastName` VARCHAR(255) NOT NULL,
-  `Title` VARCHAR(63) NOT NULL,
-  `Salary` DECIMAL(10,2) NOT NULL,
-  `StoreId` INT NOT NULL,
-  `Phone` VARCHAR(255) NOT NULL,
+  `Phone` VARCHAR(63) NOT NULL,
   `Email` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`Id`, `StoreId`, `Phone`, `Email`),
-  INDEX `IX_Employees_StoreId` USING BTREE (`StoreId`) VISIBLE,
-  CONSTRAINT `FK_Employees_Stores_StoreId`
-    FOREIGN KEY (`StoreId`)
-    REFERENCES `coffee`.`Stores` (`Id`)
-    ON DELETE CASCADE
-    ON UPDATE RESTRICT)
+  PRIMARY KEY (`Id`, `Phone`, `Email`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
+AUTO_INCREMENT = 3
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -158,7 +146,7 @@ CREATE TABLE IF NOT EXISTS `coffee`.`Products` (
   `ImageURI` VARCHAR(255) NULL DEFAULT NULL,
   PRIMARY KEY (`Id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 0
+AUTO_INCREMENT = 7
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -208,6 +196,29 @@ CREATE TABLE IF NOT EXISTS `coffee`.`OrderProduct` (
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `coffee`.`JobTitle`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `coffee`.`JobTitle` (
+  `EmployeeId` INT NOT NULL,
+  `StoreId` INT NULL,
+  `Title` VARCHAR(63) NOT NULL,
+  `Salary` DECIMAL(10,2) NOT NULL,
+  PRIMARY KEY (`EmployeeId`),
+  INDEX `fk_JobTitle_2_idx` (`StoreId` ASC) VISIBLE,
+  CONSTRAINT `fk_JobTitle_1`
+    FOREIGN KEY (`EmployeeId`)
+    REFERENCES `coffee`.`Employees` (`Id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_JobTitle_2`
+    FOREIGN KEY (`StoreId`)
+    REFERENCES `coffee`.`Stores` (`Id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
 
 USE `coffee` ;
 
@@ -431,10 +442,6 @@ BEGIN
 END$$
 
 DELIMITER ;
-
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 USE `coffee`;
 
 DELIMITER $$
@@ -452,3 +459,7 @@ END$$
 
 
 DELIMITER ;
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
