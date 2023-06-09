@@ -21,13 +21,21 @@ INSERT INTO `coffee`.`Products` (`Id`, `Title`, `Description`, `Price`, `ImageUR
 (5, 'Американо', 'Кофейный напиток, приготовленный путем разбавления эспрессо горячей водой.', 220, 'https://example.com/americano.jpg'),
 (6, 'Макиато', 'Кофейный напиток на основе эспрессо с небольшим количеством молока, обычно взбитого.', 260, 'https://example.com/macchiato.jpg');
 
-INSERT INTO `coffee`.`Employees` (`Id`, `FirstName`, `LastName`, `Title`, `Salary`, `StoreId`, `Phone`, `Email`) VALUES
-(1, 'Михаил', 'Иванов', 'Бариста', 2500.00, 1, '1112223333', 'mike@example.com'),
-(2, 'Лиза', 'Петрова', 'Менеджер', 5000.00, 1, '4445556666', 'lisa@example.com'),
-(3, 'Иван', 'Сидоров', 'Бариста', 2500.00, 2, '7778889999', 'ivan@example.com'),
-(4, 'Таня','Козлова', 'Менеджер', 5000.00, 2, '0001112222', 'tanya@example.com'),
-(5, 'Денис', 'Смирнов', 'Бариста', 2500.00, 3, '3334445555', 'denis@example.com'),
-(6, 'Варвара', 'Кузнецова', 'Менеджер', 5000.00, 3, '6667778888', 'varvara@example.com');
+INSERT INTO `coffee`.`Employees` (`Id`, `FirstName`, `LastName`, `Phone`, `Email`) VALUES
+(1, 'Михаил', 'Иванов', '1112223333', 'mike@example.com'),
+(2, 'Лиза', 'Петрова', '4445556666', 'lisa@example.com'),
+(3, 'Иван', 'Сидоров', '7778889999', 'ivan@example.com'),
+(4, 'Таня','Козлова', '0001112222', 'tanya@example.com'),
+(5, 'Денис', 'Смирнов', '3334445555', 'denis@example.com'),
+(6, 'Варвара', 'Кузнецова', '6667778888', 'varvara@example.com');
+
+INSERT INTO `coffee`.`JobTitle` (`EmployeeId`,  `StoreId`, `Title`, `Salary`) VALUES
+(1, 1, 'Бариста', 25000.00),
+(2, 1, 'Менеджер', 50000.00),
+(3, 2, 'Бариста', 25000.00),
+(4, 2, 'Менеджер', 50000.00),
+(5, 3, 'Бариста', 25000.00),
+(6, 3, 'Менеджер', 50000.00);
 
 INSERT INTO `coffee`.`Orders` (`Id`, `StoreId`, `CustomerId`, `Status`) VALUES
 (1, 1, 1, 'Завершен'),
